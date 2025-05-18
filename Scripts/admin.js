@@ -125,21 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  const handleNewCategory = () => {
-    const newCategoryInput = document.getElementById("new-category-input");
-    const newCategory = newCategoryInput.value.trim();
-    if (newCategory) {
-      const option = document.createElement("option");
-      option.value = newCategory;
-      option.textContent = newCategory;
-      categorySelect.appendChild(option);
-      categorySelect.value = newCategory;
-      newCategoryInput.value = "";
-    } else {
-      categorySelect.value = "";
-    }
-  };
-
   const loadSettings = () => {
     const stored = localStorage.getItem("quizSettings");
     if (stored) {
@@ -268,51 +253,35 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
-  // Fetch categories and questions from questions.json
-  fetch('questions.json')
+  // Fetch categories from backend
+  fetch('https://quiz-app-db-2.onrender.com/api/categories')
     .then(response => response.json())
-    .then(data => {
-      const questionsFromFile = data;
-      questions = questionsFromFile;
-      // Populate category dropdown
-      const categorySelect = document.getElementById("category");
-      const categories = [...new Set(questionsFromFile.map(q => q.category))];
+    .then(categories => {
       categorySelect.innerHTML = '<option value="">Select category</option>';
       categories.forEach(cat => {
         const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
+        option.value = cat.id;
+        option.textContent = cat.name;
         categorySelect.appendChild(option);
       });
-      // Add option for new category
-      const newCatOption = document.createElement("option");
-      newCatOption.value = "__new__";
-      newCatOption.textContent = "Add New Category...";
-      categorySelect.appendChild(newCatOption);
-
-      // Add input for new category (hidden by default)
-      if (!newCatInput) {
-        newCatInput = document.createElement('input');
-        newCatInput.type = 'text';
-        newCatInput.id = 'new-category-input';
-        newCatInput.placeholder = 'Enter new category';
-        newCatInput.style.display = 'none';
-        categorySelect.parentNode.insertBefore(newCatInput, categorySelect.nextSibling);
-      }
       categorySelect.addEventListener('change', function() {
-        if (categorySelect.value === "__new__") {
-          newCatInput.style.display = 'block';
-          newCatInput.focus();
+        if (categorySelect.value) {
+          fetch(`https://quiz-app-db-2.onrender.com/api/questions/${categorySelect.value}`)
+            .then(response => response.json())
+            .then(questionsFromFile => {
+              questions = questionsFromFile;
+              renderQuestions(questionsFromFile);
+            })
+            .catch(err => {
+              console.error('Error loading questions:', err);
+              renderQuestions([]);
+            });
         } else {
-          newCatInput.style.display = 'none';
+          renderQuestions([]);
         }
       });
-
-      // Render existing questions
-      renderQuestions(questionsFromFile);
     })
     .catch(err => {
-      console.error('Error loading questions.json:', err);
-      renderQuestions([]);
+      console.error('Error loading categories:', err);
     });
 });

@@ -66,6 +66,20 @@ app.get('/api/highscores', async (req, res) => {
     }
 });
 
+// Add new category
+app.post('/api/categories', async (req, res) => {
+    try {
+        const { name } = req.body;
+        const result = await db.query(
+            'INSERT INTO categories (name) VALUES ($1) RETURNING *',
+            [name]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/', (req, res) => {
   res.send('Quiz App API is running');
 });
