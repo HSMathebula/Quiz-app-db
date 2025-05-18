@@ -1,7 +1,7 @@
 // API URL configuration
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api'
-    : 'https://quiz-app-backend.up.railway.app/api';
+    : 'https://quiz-app.onrender.com/api';
 
 // Get categories
 async function getCategories() {
