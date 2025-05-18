@@ -259,16 +259,17 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch('https://quiz-app-db-2.onrender.com/api/categories')
       .then(response => response.json())
       .then(categories => {
+        if (!Array.isArray(categories)) {
+          questionList.innerHTML = '<div class="error">Failed to load categories. Please check your backend connection and database.</div>';
+          return;
+        }
         categories.forEach(cat => {
           fetch(`https://quiz-app-db-2.onrender.com/api/questions/${cat.id}`)
             .then(response => response.json())
             .then(questions => {
-              // Render category title
               const catTitle = document.createElement('h3');
               catTitle.textContent = cat.name;
               questionList.appendChild(catTitle);
-
-              // Render questions for this category
               questions.forEach((q, idx) => {
                 const card = document.createElement('div');
                 card.classList.add('question-card');
@@ -290,6 +291,10 @@ document.addEventListener("DOMContentLoaded", () => {
               });
             });
         });
+      })
+      .catch(err => {
+        questionList.innerHTML = '<div class="error">Failed to load categories. Please check your backend connection and database.</div>';
+        console.error('Error loading categories:', err);
       });
   }
 
