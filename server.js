@@ -66,6 +66,10 @@ app.get('/api/highscores', async (req, res) => {
     }
 });
 
+app.get('/', (req, res) => {
+  res.send('Quiz App API is running');
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 }); 
