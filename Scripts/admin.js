@@ -253,35 +253,45 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
-  // Fetch categories from backend
-  fetch('https://quiz-app-db-2.onrender.com/api/categories')
-    .then(response => response.json())
-    .then(categories => {
-      categorySelect.innerHTML = '<option value="">Select category</option>';
-      categories.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat.id;
-        option.textContent = cat.name;
-        categorySelect.appendChild(option);
-      });
-      categorySelect.addEventListener('change', function() {
-        if (categorySelect.value) {
-          fetch(`https://quiz-app-db-2.onrender.com/api/questions/${categorySelect.value}`)
+  // Fetch and display all categories and their questions
+  function loadAllQuestionsAndCategories() {
+    questionList.innerHTML = '';
+    fetch('https://quiz-app-db-2.onrender.com/api/categories')
+      .then(response => response.json())
+      .then(categories => {
+        categories.forEach(cat => {
+          fetch(`https://quiz-app-db-2.onrender.com/api/questions/${cat.id}`)
             .then(response => response.json())
-            .then(questionsFromFile => {
-              questions = questionsFromFile;
-              renderQuestions(questionsFromFile);
-            })
-            .catch(err => {
-              console.error('Error loading questions:', err);
-              renderQuestions([]);
+            .then(questions => {
+              // Render category title
+              const catTitle = document.createElement('h3');
+              catTitle.textContent = cat.name;
+              questionList.appendChild(catTitle);
+
+              // Render questions for this category
+              questions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.classList.add('question-card');
+                card.innerHTML = `
+                  <div class="question-header">
+                    <h4>${idx + 1}. ${q.question}</h4>
+                    <span class="category-badge">${cat.name}</span>
+                  </div>
+                  <ul class="options-list">
+                    ${q.choices.map((choice, choiceIdx) =>
+                      `<li class="option-item ${choice === q.answer ? "correct-answer" : ""}">
+                        <span class="option-letter">${String.fromCharCode(65 + choiceIdx)}.</span>
+                        ${choice}
+                      </li>`
+                    ).join("")}
+                  </ul>
+                `;
+                questionList.appendChild(card);
+              });
             });
-        } else {
-          renderQuestions([]);
-        }
+        });
       });
-    })
-    .catch(err => {
-      console.error('Error loading categories:', err);
-    });
+  }
+
+  loadAllQuestionsAndCategories();
 });

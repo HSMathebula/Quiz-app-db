@@ -16,7 +16,8 @@ app.get('/api/categories', async (req, res) => {
         const result = await db.query('SELECT * FROM categories ORDER BY name');
         res.json(result.rows);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error in /api/categories:', error);
+        res.status(500).json({ error: error.message || String(error) });
     }
 });
 
