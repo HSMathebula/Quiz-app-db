@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quiz Admin</title>
+    <link rel="stylesheet" href="Styles/admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <button class="home" onclick="window.location.href='index.html'">
+        Back to home
+      </button>
+
+      <h1>Admin Panel</h1>
+      <h2>Quiz Settings</h2>
+      <p class="subtext">Set imits for how many questions a user can take</p>
+
+      <form id="settings-form">
+        <label for="min-questions">Minimum Qustions</label>
+        <input type="number" id="min-questions" min="1" required />
+
+        <label for="max-questions">Maximum Questions</label>
+        <input type="number" id="max-questions" min="1" required />
+
+        <button type="submit" class="submit">Save Settings</button>
+      </form>
+
+      <h2>Add New Question</h2>
+      <p class="subtext">Create a new question for the quiz</p>
+
+      <form id="question-form">
+        <label for="category">Category</label>
+        <select id="category">
+          <option value="">Select category</option>
+        </select>
+
+        <label for="question">Question</label>
+        <input
+          type="text"
+          id="question"
+          placeholder="Enter question text"
+          required
+        />
+
+        <label>Options</label>
+        <div id="options-container">
+          <div class="option-group">
+            <input
+              type="text"
+              class="option-input"
+              placeholder="Option 1"
+              required
+            />
+            <button type="button" class="mark-correct">Correct</button>
+          </div>
+          <div class="option-group">
+            <input
+              type="text"
+              class="option-input"
+              placeholder="Option 2"
+              required
+            />
+            <button type="button" class="mark-correct">Correct</button>
+          </div>
+          <div class="option-group">
+            <input
+              type="text"
+              class="option-input"
+              placeholder="Option 3"
+              required
+            />
+            <button type="button" class="mark-correct">Correct</button>
+          </div>
+          <div class="option-group">
+            <input
+              type="text"
+              class="option-input"
+              placeholder="Option 4"
+              required
+            />
+            <button type="button" class="mark-correct">Correct</button>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Add Question</button>
+      </form>
+
+      <h2>Existing Questions</h2>
+      <p>Manage your quiz Questions</p>
+      <div id="question-list" class="question-list"></div>
+    </div>
+    <script src="scripts/admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,141 @@
+[
+  {
+    "category": "Web Development",
+    "question": "What does a 404 HTTP status code mean?",
+    "choices": ["Page moved", "Page not found", "Internal server error", "Request successful"],
+    "answer": "Page not found"
+  },
+  {
+    "category": "Web Development",
+    "question": "Which language is primarily used for client-side scripting?",
+    "choices": ["PHP", "Python", "JavaScript", "Ruby"],
+    "answer": "JavaScript"
+  },
+  {
+    "category": "Web Development",
+    "question": "What is the purpose of the <meta> tag in HTML?",
+    "choices": ["Add images", "Link CSS", "Define metadata", "Embed videos"],
+    "answer": "Define metadata"
+  },
+  {
+    "category": "Web Development",
+    "question": "Which protocol is used to transfer web pages?",
+    "choices": ["FTP", "SMTP", "HTTP", "SSH"],
+    "answer": "HTTP"
+  },
+  {
+    "category": "Programming Languages",
+    "question": "Which of these is a compiled programming language?",
+    "choices": ["JavaScript", "Python", "Java", "PHP"],
+    "answer": "Java"
+  },
+  {
+    "category": "Programming Languages",
+    "question": "Which keyword is used to define a variable in JavaScript?",
+    "choices": ["var", "define", "let", "int"],
+    "answer": "var"
+  },
+  {
+    "category": "Programming Languages",
+    "question": "In Python, what does the 'len()' function do?",
+    "choices": ["Returns length", "Creates a list", "Sorts items", "Defines variable"],
+    "answer": "Returns length"
+  },
+
+  {
+    "category": "Programming Languages",
+    "question": "Which language is known for its use in statistical analysis?",
+    "choices": ["R", "Ruby", "C#", "Swift"],
+    "answer": "R"
+  },
+  {
+    "category": "Databases",
+    "question": "Which command is used to retrieve data from a database?",
+    "choices": ["INSERT", "SELECT", "UPDATE", "DELETE"],
+    "answer": "SELECT"
+  },
+  {
+    "category": "Databases",
+    "question": "What type of database is MongoDB?",
+    "choices": ["Relational", "Object-oriented", "NoSQL", "Hierarchical"],
+    "answer": "NoSQL"
+  },
+  {
+    "category": "Databases",
+    "question": "Which language is used to interact with most relational databases?",
+    "choices": ["HTML", "SQL", "XML", "PHP"],
+    "answer": "SQL"
+  },
+  {
+    "category": "Databases",
+    "question": "What does the acronym DBMS stand for?",
+    "choices": ["Database Managed Server", "Data Backup Machine Software", "Database Management System", "Direct Backup Management System"],
+    "answer": "Database Management System"
+  },
+  {
+    "category": "Databases",
+    "question": "What is a primary key?",
+    "choices": ["A key that defines a database", "A column with unique values", "A foreign key", "A password for access"],
+    "answer": "A column with unique values"
+  },
+  {
+    "category": "Computer Networking",
+    "question": "What does LAN stand for?",
+    "choices": ["Local Access Node", "Large Area Network", "Local Area Network", "Limited Area Network"],
+    "answer": "Local Area Network"
+  },
+  {
+    "category": "Computer Networking",
+    "question": "Which device connects different networks together?",
+    "choices": ["Switch", "Router", "Hub", "Repeater"],
+    "answer": "Router"
+  },
+  {
+    "category": "Computer Networking",
+    "question": "Which layer of the OSI model is responsible for routing?",
+    "choices": ["Data Link", "Transport", "Network", "Session"],
+    "answer": "Network"
+  },
+  {
+    "category": "Computer Networking",
+    "question": "Which protocol is used for secure web browsing?",
+    "choices": ["HTTP", "HTTPS", "FTP", "TCP"],
+    "answer": "HTTPS"
+  },
+  {
+    "category": "Computer Networking",
+    "question": "What is the function of a DNS server?",
+    "choices": ["Connects to the internet", "Assigns IP addresses", "Translates domain names to IPs", "Hosts websites"],
+    "answer": "Translates domain names to IPs"
+  },
+  {
+    "category": "Artificial Intelligence",
+    "question": "What does AI stand for?",
+    "choices": ["Artificial Interface", "Automated Intelligence", "Artificial Intelligence", "Advanced Integration"],
+    "answer": "Artificial Intelligence"
+  },
+  {
+    "category": "Artificial Intelligence",
+    "question": "Which term describes the ability of a machine to mimic human thought?",
+    "choices": ["Automation", "Machine Learning", "Cognition", "AI"],
+    "answer": "AI"
+  },
+  {
+    "category": "Artificial Intelligence",
+    "question": "Which is a common language for AI development?",
+    "choices": ["HTML", "Python", "CSS", "SQL"],
+    "answer": "Python"
+  },
+  {
+    "category": "Artificial Intelligence",
+    "question": "What type of AI is used in personal assistants like Siri or Alexa?",
+    "choices": ["Narrow AI", "General AI", "Super AI", "Open AI"],
+    "answer": "Narrow AI"
+  },
+  {
+    "category": "Artificial Intelligence",
+    "question": "What is machine learning?",
+    "choices": ["Programming machines manually", "Making computers walk", "Training models to learn from data", "Creating artificial brains"],
+    "answer": "Training models to learn from data"
+  }
+]

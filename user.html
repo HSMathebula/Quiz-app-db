@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Start a New Quiz</title>
+  <link rel="stylesheet" href="./Styles/user.css" />
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Start a New Quiz</h1>
+    <p class="subheading">Enter your name and select a category</p>
+    <div id="start-screen">
+      <div class="form-group">
+        <label for="username">Your Name</label>
+        <input type="text" id="username" placeholder="Enter your name" />
+      </div>
+      <div class="form-group">
+        <label>Select Category</label>
+        <div id="category-list">
+          <!-- Category radio buttons will be injected here by JS -->
+        </div>
+      </div>
+      <button id="start-btn">Start Quiz</button>
+    </div>
+  </div>
+  <script src="./Scripts/user.js"></script>
+</body>
+</html>
