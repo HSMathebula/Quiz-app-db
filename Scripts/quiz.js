@@ -64,15 +64,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 800);
   }
 
-  function showResults() {
-    // Save high score to localStorage
+  async function showResults() {
+    // Save high score to backend
     const params = new URLSearchParams(window.location.search);
     const username = params.get('username') || 'Anonymous';
-    const category = params.get('category') || 'General';
-    const highScores = JSON.parse(localStorage.getItem('highScores') || '[]');
-    highScores.push({ name: username, score, total: filteredQuestions.length, category, date: new Date().toISOString() });
-    localStorage.setItem('highScores', JSON.stringify(highScores));
-
+    const categoryName = params.get('category') || 'General';
+    let categoryId = null;
+    try {
+      // Fetch categoryId from backend
+      const catRes = await fetch(`${API_BASE_URL.replace('/api','')}/api/categories`);
+      const categories = await catRes.json();
+      const cat = categories.find(c => c.name === categoryName);
+      if (cat) categoryId = cat.id;
+      if (!categoryId) throw new Error('Category not found');
+      // Save high score
+      await fetch(`${API_BASE_URL}/highscores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName: username, score, categoryId })
+      });
+    } catch (err) {
+      console.error('Failed to save high score:', err);
+    }
     document.querySelector('.quiz-question').innerHTML = `
       <h2 class="quiz-complete-title">Quiz Completed!</h2>
       <div class="quiz-score-large">${score} / ${filteredQuestions.length}</div>
@@ -125,7 +138,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     })
     .then(data => {
-      questions = data.map(q => ({
+      // Remove duplicate questions by question id or text
+      const seen = new Set();
+      questions = data.filter(q => {
+        if (seen.has(q.question)) return false;
+        seen.add(q.question);
+        return true;
+      }).map(q => ({
         question: q.question,
         choices: Array.isArray(q.choices) ? shuffleArray(q.choices) : [],
         answer: q.answer,
