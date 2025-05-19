@@ -142,20 +142,51 @@ function shuffleArray(array) {
   return array;
 }
 
-fetch('questions.json')
-  .then(response => response.json())
-  .then(data => {
-    questions = data;
-    // Dynamically generate category radio buttons
-    const categories = [...new Set(questions.map(q => q.category))];
-    const categoryList = document.getElementById('category-list');
-    console.log('Loaded questions:', questions);
-    console.log('Extracted categories:', categories);
-    console.log('category-list element:', categoryList);
-    if (!categoryList) {
-      alert('Category list element not found!');
-      return;
+const categoryList = document.getElementById('category-list');
+
+// Add loading state
+categoryList.innerHTML = '<p class="loading">Loading categories...</p>';
+
+// API configuration
+const API_BASE_URL = 'http://localhost:3000/api';
+
+// Function to handle errors
+function handleError(error, message) {
+  console.error('Error:', error);
+  const errorMessage = error.message.includes('Failed to fetch') 
+    ? 'Cannot connect to the server. Please make sure you are accessing the page through http://localhost:3000'
+    : message;
+  
+  categoryList.innerHTML = `
+    <div class="error-container">
+      <p class="error">${errorMessage}</p>
+      <button onclick="window.location.href='http://localhost:3000'" class="retry-btn">Go to Development Server</button>
+    </div>
+  `;
+}
+
+// Fetch categories with retry logic
+async function fetchCategories(retries = 3) {
+  try {
+    console.log('Fetching categories from:', `${API_BASE_URL}/categories`);
+    const response = await fetch(`${API_BASE_URL}/categories`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const categories = await response.json();
+    
+    if (!Array.isArray(categories) || categories.length === 0) {
+      throw new Error('No categories found');
+    }
+
     categoryList.innerHTML = '';
     categories.forEach(cat => {
       const label = document.createElement('label');
@@ -163,13 +194,22 @@ fetch('questions.json')
       const input = document.createElement('input');
       input.type = 'radio';
       input.name = 'category';
-      input.value = cat;
+      input.value = cat.name;
       label.appendChild(input);
-      label.appendChild(document.createTextNode(' ' + cat));
+      label.appendChild(document.createTextNode(' ' + cat.name));
       categoryList.appendChild(label);
     });
-  })
-  .catch(err => {
-    console.error('Error loading questions:', err);
-  });
+  } catch (error) {
+    console.error('Fetch error:', error);
+    if (retries > 0) {
+      console.log(`Retrying... ${retries} attempts left`);
+      setTimeout(() => fetchCategories(retries - 1), 1000);
+    } else {
+      handleError(error, 'Failed to load categories. Please check your connection and try again.');
+    }
+  }
+}
+
+// Start fetching categories
+fetchCategories();
 });

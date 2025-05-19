@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const username = params.get('username');
   const category = params.get('category');
 
+  // API configuration
+  const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : 'https://quiz-app-backend-2.onrender.com/api';
+
   let questions = [];
   let filteredQuestions = [];
   let currentQuestionIndex = 0;
@@ -106,22 +111,38 @@ document.addEventListener('DOMContentLoaded', function() {
     return array;
   }
 
-  fetch('questions.json')
-    .then(response => response.json())
+  fetch(`${API_BASE_URL}/questions?category=${encodeURIComponent(category)}`)
+    .then(async response => {
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
+      // Try to parse JSON, throw if invalid
+      try {
+        return await response.json();
+      } catch (e) {
+        throw new Error('Invalid JSON response');
+      }
+    })
     .then(data => {
-      questions = data;
+      questions = data.map(q => ({
+        question: q.question,
+        choices: Array.isArray(q.choices) ? shuffleArray(q.choices) : [],
+        answer: q.answer,
+        category: q.category_id
+      }));
+      
       // Get min and max from localStorage (set by admin)
       const settings = JSON.parse(localStorage.getItem('quizSettings') || '{"min":1,"max":5}');
       const min = settings.min || 1;
       const max = settings.max || 5;
       // Pick a random number between min and max
       const numQuestions = Math.floor(Math.random() * (max - min + 1)) + min;
-      filteredQuestions = questions.filter(q => q.category === category);
-      filteredQuestions = shuffleArray(filteredQuestions).slice(0, numQuestions);
+      filteredQuestions = shuffleArray(questions).slice(0, numQuestions);
       showQuestion();
     })
     .catch(err => {
-      document.querySelector('.quiz-question').innerHTML = '<p>Error loading questions.</p>';
+      document.querySelector('.quiz-question').innerHTML = `<p class="error">Error loading questions: ${err.message}</p>`;
       console.error('Error loading questions:', err);
     });
 }); 

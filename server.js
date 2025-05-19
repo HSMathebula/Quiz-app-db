@@ -6,18 +6,44 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS configuration
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 
-// Get categories
+// Add error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
+// Get categories - add better error handling
 app.get('/api/categories', async (req, res) => {
     try {
+        console.log('Fetching categories...');
         const result = await db.query('SELECT * FROM categories ORDER BY name');
+        console.log('Categories fetched:', result.rows);
         res.json(result.rows);
     } catch (error) {
         console.error('Error in /api/categories:', error);
-        res.status(500).json({ error: error.message || String(error) });
+        res.status(500).json({ 
+            error: error.message || String(error),
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -31,6 +57,33 @@ app.get('/api/questions/:categoryId', async (req, res) => {
         res.json(result.rows.map(row => ({
             ...row,
             choices: row.choices // No JSON.parse, as Postgres returns JSONB as object
+        })));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get questions by category name (query param)
+app.get('/api/questions', async (req, res) => {
+    try {
+        const categoryName = req.query.category;
+        if (!categoryName) {
+            return res.status(400).json({ error: 'Category is required' });
+        }
+        // Get category ID from name
+        const catResult = await db.query('SELECT id FROM categories WHERE name = $1', [categoryName]);
+        if (catResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        const categoryId = catResult.rows[0].id;
+        // Get questions for this category
+        const result = await db.query(
+            'SELECT * FROM questions WHERE category_id = $1',
+            [categoryId]
+        );
+        res.json(result.rows.map(row => ({
+            ...row,
+            choices: row.choices // or JSON.parse(row.choices) if needed
         })));
     } catch (error) {
         res.status(500).json({ error: error.message });
