@@ -5,28 +5,30 @@ async function createTables() {
     await db.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) UNIQUE NOT NULL
+        name VARCHAR(100) NOT NULL UNIQUE
       );
-    `);
-    console.log('Created table: categories');
 
-    await db.query(`
       CREATE TABLE IF NOT EXISTS questions (
         id SERIAL PRIMARY KEY,
         category_id INTEGER REFERENCES categories(id),
         question TEXT NOT NULL,
         choices JSONB NOT NULL,
-        answer TEXT NOT NULL
+        answer VARCHAR(255) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS high_scores (
+        id SERIAL PRIMARY KEY,
+        player_name VARCHAR(100) NOT NULL,
+        score INTEGER NOT NULL,
+        category_id INTEGER REFERENCES categories(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('Created table: questions');
-
-    console.log('All tables created successfully!');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error creating tables:', err);
-    process.exit(1);
+    console.log('Tables created or already exist.');
+  } catch (error) {
+    console.error('Error creating tables:', error);
+    throw error;
   }
 }
 
-createTables(); 
+module.exports = createTables; 
