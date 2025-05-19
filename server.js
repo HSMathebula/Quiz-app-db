@@ -81,6 +81,46 @@ app.post('/api/categories', async (req, res) => {
     }
 });
 
+// Add new question
+app.post('/api/questions', async (req, res) => {
+    try {
+        const { categoryId, question, choices, answer } = req.body;
+        const result = await db.query(
+            'INSERT INTO questions (category_id, question, choices, answer) VALUES ($1, $2, $3, $4) RETURNING *',
+            [categoryId, question, JSON.stringify(choices), answer]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete a question
+app.delete('/api/questions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM questions WHERE id = $1', [id]);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update a question
+app.put('/api/questions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { question, choices, answer } = req.body;
+        const result = await db.query(
+            'UPDATE questions SET question = $1, choices = $2, answer = $3 WHERE id = $4 RETURNING *',
+            [question, JSON.stringify(choices), answer, id]
+        );
+        res.json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 if (process.env.ENABLE_MIGRATION === 'true') {
   app.get('/run-migration', async (req, res) => {
     try {
@@ -88,6 +128,17 @@ if (process.env.ENABLE_MIGRATION === 'true') {
       res.send('Migration script executed! Check logs for details.');
     } catch (err) {
       res.status(500).send('Migration failed: ' + err.message);
+    }
+  });
+}
+
+if (process.env.ENABLE_IMPORT === 'true') {
+  app.get('/run-import', async (req, res) => {
+    try {
+      await require('./Database/importQuestions');
+      res.send('Import script executed! Check logs for details.');
+    } catch (err) {
+      res.status(500).send('Import failed: ' + err.message);
     }
   });
 }

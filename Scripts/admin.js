@@ -179,16 +179,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupMarkCorrectButtons();
 
-  form.addEventListener("submit", (e) => {
+  // Fetch categories from backend and populate dropdown
+  function fetchAndPopulateCategories(selectedId = null) {
+    fetch('https://quiz-app-db-2.onrender.com/api/categories')
+      .then(response => response.json())
+      .then(categories => {
+        categorySelect.innerHTML = '<option value="">Select category</option>';
+        categories.forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat.id;
+          option.textContent = cat.name;
+          categorySelect.appendChild(option);
+        });
+        // Add option for new category
+        const newCatOption = document.createElement("option");
+        newCatOption.value = "__new__";
+        newCatOption.textContent = "Add New Category...";
+        categorySelect.appendChild(newCatOption);
+        if (selectedId) categorySelect.value = selectedId;
+      });
+  }
+
+  categorySelect.addEventListener('change', function() {
+    if (categorySelect.value === "__new__") {
+      if (!newCatInput) {
+        newCatInput = document.createElement('input');
+        newCatInput.type = 'text';
+        newCatInput.id = 'new-category-input';
+        newCatInput.placeholder = 'Enter new category name';
+        newCatInput.style.display = 'block';
+        categorySelect.parentNode.insertBefore(newCatInput, categorySelect.nextSibling);
+      }
+      newCatInput.style.display = 'block';
+      newCatInput.focus();
+    } else if (newCatInput) {
+      newCatInput.style.display = 'none';
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    let category = categorySelect.value.trim();
-    if (category === "__new__") {
-      category = newCatInput.value.trim();
-      if (!category) {
+    let categoryId = categorySelect.value;
+    let categoryName = null;
+    if (categoryId === "__new__") {
+      categoryName = newCatInput.value.trim();
+      if (!categoryName) {
         alert('Please enter a new category name.');
         newCatInput.focus();
         return;
       }
+      // Add new category to backend
+      const res = await fetch('https://quiz-app-db-2.onrender.com/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: categoryName })
+      });
+      const newCat = await res.json();
+      categoryId = newCat.id;
+      fetchAndPopulateCategories(categoryId); // Refresh dropdown and select new
     }
     const questionText = document.getElementById("question").value.trim();
     const optionInputs = document.querySelectorAll(".option-input");
@@ -204,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     });
-    if (!category) {
+    if (!categoryId) {
       alert("Please select a category.");
       return;
     }
@@ -220,38 +268,25 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Please mark the correct answer.");
       return;
     }
-    const newQuestion = {
-      category,
-      question: questionText,
-      choices: options,
-      answer,
-    };
-    questions.push(newQuestion);
-    saveQuestions(questions);
-    renderQuestions(questions);
-    loadCategories(questions);
+    // Add question to backend
+    await fetch('https://quiz-app-db-2.onrender.com/api/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        categoryId,
+        question: questionText,
+        choices: options,
+        answer
+      })
+    });
     form.reset();
-    document.querySelectorAll(".mark-correct").forEach((btn) =>
-      btn.classList.remove("selected")
-    );
-
-    // Add a button to download the updated questions.json
-    let downloadBtn = document.getElementById('download-questions-btn');
-    if (!downloadBtn) {
-      downloadBtn = document.createElement('button');
-      downloadBtn.id = 'download-questions-btn';
-      downloadBtn.className = 'btn btn-dark';
-      downloadBtn.textContent = 'Download Updated Questions';
-      form.parentNode.appendChild(downloadBtn);
-    }
-    downloadBtn.onclick = function() {
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(questions, null, 2));
-      const dl = document.createElement('a');
-      dl.setAttribute('href', dataStr);
-      dl.setAttribute('download', 'questions.json');
-      dl.click();
-    };
+    if (newCatInput) newCatInput.style.display = 'none';
+    fetchAndPopulateCategories();
+    // Optionally reload questions list here
   });
+
+  // On page load, fetch categories
+  fetchAndPopulateCategories();
 
   // Fetch and display all categories and their questions
   function loadAllQuestionsAndCategories() {
@@ -286,11 +321,45 @@ document.addEventListener("DOMContentLoaded", () => {
                       </li>`
                     ).join("")}
                   </ul>
+                  <div class="question-actions">
+                    <button class="edit-btn" data-id="${q.id}">Edit</button>
+                    <button class="delete-btn" data-id="${q.id}">Delete</button>
+                  </div>
                 `;
                 questionList.appendChild(card);
               });
             });
         });
+        // Add event listeners for delete and edit after rendering
+        setTimeout(() => {
+          document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const id = btn.getAttribute('data-id');
+              if (confirm('Are you sure you want to delete this question?')) {
+                await fetch(`https://quiz-app-db-2.onrender.com/api/questions/${id}`, { method: 'DELETE' });
+                loadAllQuestionsAndCategories();
+              }
+            });
+          });
+          document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const id = btn.getAttribute('data-id');
+              // Simple prompt-based edit (for demo)
+              const card = btn.closest('.question-card');
+              const questionText = prompt('Edit question:', card.querySelector('h4').textContent.replace(/^\d+\.\s*/, ''));
+              if (!questionText) return;
+              const options = Array.from(card.querySelectorAll('.option-item')).map(li => li.textContent.trim().replace(/^\w\.\s*/, ''));
+              const answer = prompt('Edit correct answer:', card.querySelector('.correct-answer')?.textContent.trim().replace(/^\w\.\s*/, ''));
+              if (!answer) return;
+              await fetch(`https://quiz-app-db-2.onrender.com/api/questions/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: questionText, choices: options, answer })
+              });
+              loadAllQuestionsAndCategories();
+            });
+          });
+        }, 500);
       })
       .catch(err => {
         questionList.innerHTML = '<div class="error">Failed to load categories. Please check your backend connection and database.</div>';
