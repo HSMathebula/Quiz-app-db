@@ -313,6 +313,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch and display all categories and their questions
   function loadAllQuestionsAndCategories() {
     questionList.innerHTML = '';
+    const statusMsg = document.getElementById('status-message') || (() => {
+      const el = document.createElement('div');
+      el.id = 'status-message';
+      el.style.margin = '10px 0';
+      questionList.parentNode.insertBefore(el, questionList);
+      return el;
+    })();
+    statusMsg.textContent = '';
+    statusMsg.style.color = '';
     fetch('https://quiz-app-db-2.onrender.com/api/categories')
       .then(response => response.json())
       .then(categories => {
@@ -324,6 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
           fetch(`https://quiz-app-db-2.onrender.com/api/questions/${cat.id}`)
             .then(response => response.json())
             .then(questions => {
+              if (!questions || !Array.isArray(questions) || questions.length === 0) return; // Only show categories with questions
               const catTitle = document.createElement('h3');
               catTitle.textContent = cat.name;
               questionList.appendChild(catTitle);
@@ -349,39 +359,71 @@ document.addEventListener("DOMContentLoaded", () => {
                   </div>
                 `;
                 questionList.appendChild(card);
+
+                // Attach delete event
+                card.querySelector('.delete-btn').addEventListener('click', async (e) => {
+                  const id = q.id;
+                  console.log('Delete clicked for question id:', id);
+                  card.querySelector('.delete-btn').disabled = true;
+                  statusMsg.textContent = '';
+                  statusMsg.style.color = '';
+                  if (confirm('Are you sure you want to delete this question?')) {
+                    try {
+                      const resp = await fetch(`https://quiz-app-db-2.onrender.com/api/questions/${id}`, { method: 'DELETE' });
+                      if (resp.ok) {
+                        statusMsg.textContent = 'Question deleted successfully!';
+                        statusMsg.style.color = 'green';
+                        loadAllQuestionsAndCategories();
+                      } else {
+                        const err = await resp.json();
+                        statusMsg.textContent = 'Error deleting question: ' + (err.error || resp.statusText);
+                        statusMsg.style.color = 'red';
+                      }
+                    } catch (err) {
+                      statusMsg.textContent = 'Error deleting question: ' + err.message;
+                      statusMsg.style.color = 'red';
+                    }
+                  }
+                  card.querySelector('.delete-btn').disabled = false;
+                });
+
+                // Attach edit event
+                card.querySelector('.edit-btn').addEventListener('click', async (e) => {
+                  const id = q.id;
+                  console.log('Edit clicked for question id:', id);
+                  card.querySelector('.edit-btn').disabled = true;
+                  statusMsg.textContent = '';
+                  statusMsg.style.color = '';
+                  // Simple prompt-based edit (for demo)
+                  const questionText = prompt('Edit question:', q.question);
+                  if (!questionText) { card.querySelector('.edit-btn').disabled = false; return; }
+                  const options = q.choices.slice();
+                  const answer = prompt('Edit correct answer:', q.answer);
+                  if (!answer) { card.querySelector('.edit-btn').disabled = false; return; }
+                  try {
+                    const resp = await fetch(`https://quiz-app-db-2.onrender.com/api/questions/${id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ question: questionText, choices: options, answer })
+                    });
+                    if (resp.ok) {
+                      statusMsg.textContent = 'Question updated successfully!';
+                      statusMsg.style.color = 'green';
+                      loadAllQuestionsAndCategories();
+                    } else {
+                      const err = await resp.json();
+                      statusMsg.textContent = 'Error updating question: ' + (err.error || resp.statusText);
+                      statusMsg.style.color = 'red';
+                    }
+                  } catch (err) {
+                    statusMsg.textContent = 'Error updating question: ' + err.message;
+                    statusMsg.style.color = 'red';
+                  }
+                  card.querySelector('.edit-btn').disabled = false;
+                });
               });
             });
         });
-        // Add event listeners for delete and edit after rendering
-        setTimeout(() => {
-          document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-              const id = btn.getAttribute('data-id');
-              if (confirm('Are you sure you want to delete this question?')) {
-                await fetch(`https://quiz-app-db-2.onrender.com/api/questions/${id}`, { method: 'DELETE' });
-                loadAllQuestionsAndCategories();
-              }
-            });
-          });
-          document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-              const id = btn.getAttribute('data-id');
-              // Simple prompt-based edit (for demo)
-              const card = btn.closest('.question-card');
-              const questionText = prompt('Edit question:', card.querySelector('h4').textContent.replace(/^\d+\.\s*/, ''));
-              if (!questionText) return;
-              const options = Array.from(card.querySelectorAll('.option-item')).map(li => li.textContent.trim().replace(/^\w\.\s*/, ''));
-              const answer = prompt('Edit correct answer:', card.querySelector('.correct-answer')?.textContent.trim().replace(/^\w\.\s*/, ''));
-              if (!answer) return;
-              await fetch(`https://quiz-app-db-2.onrender.com/api/questions/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: questionText, choices: options, answer })
-              });
-              loadAllQuestionsAndCategories();
-            });
-          });
-        }, 500);
       })
       .catch(err => {
         questionList.innerHTML = '<div class="error">Failed to load categories. Please check your backend connection and database.</div>';
