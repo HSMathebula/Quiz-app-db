@@ -81,6 +81,17 @@ app.post('/api/categories', async (req, res) => {
     }
 });
 
+if (process.env.ENABLE_MIGRATION === 'true') {
+  app.get('/run-migration', async (req, res) => {
+    try {
+      await require('./Database/createTables');
+      res.send('Migration script executed! Check logs for details.');
+    } catch (err) {
+      res.status(500).send('Migration failed: ' + err.message);
+    }
+  });
+}
+
 app.get('/', (req, res) => {
   res.send('Quiz App API is running');
 });
