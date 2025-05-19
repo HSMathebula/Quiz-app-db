@@ -30,7 +30,7 @@ app.get('/api/questions/:categoryId', async (req, res) => {
         );
         res.json(result.rows.map(row => ({
             ...row,
-            choices: JSON.parse(row.choices)
+            choices: row.choices // No JSON.parse, as Postgres returns JSONB as object
         })));
     } catch (error) {
         res.status(500).json({ error: error.message });

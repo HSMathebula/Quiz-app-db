@@ -221,67 +221,89 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     let categoryId = categorySelect.value;
     let categoryName = null;
-    if (categoryId === "__new__") {
-      categoryName = newCatInput.value.trim();
-      if (!categoryName) {
-        alert('Please enter a new category name.');
-        newCatInput.focus();
+    const statusMsg = document.getElementById('status-message') || (() => {
+      const el = document.createElement('div');
+      el.id = 'status-message';
+      el.style.margin = '10px 0';
+      form.parentNode.insertBefore(el, form);
+      return el;
+    })();
+    statusMsg.textContent = '';
+    statusMsg.style.color = '';
+    try {
+      if (categoryId === "__new__") {
+        categoryName = newCatInput.value.trim();
+        if (!categoryName) {
+          alert('Please enter a new category name.');
+          newCatInput.focus();
+          return;
+        }
+        // Add new category to backend
+        const res = await fetch('https://quiz-app-db-2.onrender.com/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: categoryName })
+        });
+        const newCat = await res.json();
+        categoryId = newCat.id;
+        fetchAndPopulateCategories(categoryId); // Refresh dropdown and select new
+      }
+      const questionText = document.getElementById("question").value.trim();
+      const optionInputs = document.querySelectorAll(".option-input");
+      const options = [];
+      let answer = "";
+      optionInputs.forEach((input) => {
+        const val = input.value.trim();
+        if (val) {
+          options.push(val);
+          const btn = input.nextElementSibling;
+          if (btn && btn.classList.contains("selected")) {
+            answer = val;
+          }
+        }
+      });
+      if (!categoryId) {
+        alert("Please select a category.");
         return;
       }
-      // Add new category to backend
-      const res = await fetch('https://quiz-app-db-2.onrender.com/api/categories', {
+      if (!questionText) {
+        alert("Please enter the question text.");
+        return;
+      }
+      if (options.length < 2) {
+        alert("Please provide at least two options.");
+        return;
+      }
+      if (!answer) {
+        alert("Please mark the correct answer.");
+        return;
+      }
+      // Add question to backend
+      const resp = await fetch('https://quiz-app-db-2.onrender.com/api/questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: categoryName })
+        body: JSON.stringify({
+          categoryId,
+          question: questionText,
+          choices: options,
+          answer
+        })
       });
-      const newCat = await res.json();
-      categoryId = newCat.id;
-      fetchAndPopulateCategories(categoryId); // Refresh dropdown and select new
-    }
-    const questionText = document.getElementById("question").value.trim();
-    const optionInputs = document.querySelectorAll(".option-input");
-    const options = [];
-    let answer = "";
-    optionInputs.forEach((input) => {
-      const val = input.value.trim();
-      if (val) {
-        options.push(val);
-        const btn = input.nextElementSibling;
-        if (btn && btn.classList.contains("selected")) {
-          answer = val;
-        }
+      if (resp.ok) {
+        statusMsg.textContent = 'Question added successfully!';
+        statusMsg.style.color = 'green';
+        form.reset();
+        if (newCatInput) newCatInput.style.display = 'none';
+        fetchAndPopulateCategories();
+      } else {
+        const err = await resp.json();
+        statusMsg.textContent = 'Error adding question: ' + (err.error || resp.statusText);
+        statusMsg.style.color = 'red';
       }
-    });
-    if (!categoryId) {
-      alert("Please select a category.");
-      return;
+    } catch (err) {
+      statusMsg.textContent = 'Error adding question: ' + err.message;
+      statusMsg.style.color = 'red';
     }
-    if (!questionText) {
-      alert("Please enter the question text.");
-      return;
-    }
-    if (options.length < 2) {
-      alert("Please provide at least two options.");
-      return;
-    }
-    if (!answer) {
-      alert("Please mark the correct answer.");
-      return;
-    }
-    // Add question to backend
-    await fetch('https://quiz-app-db-2.onrender.com/api/questions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        categoryId,
-        question: questionText,
-        choices: options,
-        answer
-      })
-    });
-    form.reset();
-    if (newCatInput) newCatInput.style.display = 'none';
-    fetchAndPopulateCategories();
     // Optionally reload questions list here
   });
 
